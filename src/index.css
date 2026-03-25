@@ -1,0 +1,60 @@
+:root {
+  font-family:
+    'Manrope', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(47, 127, 179, 0.26), transparent 24%),
+    radial-gradient(circle at 84% 18%, rgba(92, 184, 92, 0.22), transparent 26%),
+    radial-gradient(circle at 52% 78%, rgba(212, 166, 42, 0.12), transparent 24%),
+    linear-gradient(150deg, #0a1a26 0%, #0d2130 28%, #0f2a1f 62%, #0b0b0d 100%);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --card-border: rgba(255, 255, 255, 0.08);
+  --gold-1: #a6761d;
+  --gold-2: #d4a62a;
+  --gold-3: #f2c94c;
+  --energy-1: #1e5f8c;
+  --energy-2: #3790ca;
+  --energy-3: #42a047;
+  --energy-4: #67c76a;
+  --accent: #d4a62a;
+  --accent-strong: #f2c94c;
+  --muted: #d0d5d8;
+  --positive: #9ee0ab;
+  --warning: #f0c56a;
+  --shadow:
+    0 32px 68px rgba(0, 0, 0, 0.34),
+    0 12px 26px rgba(4, 24, 32, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.02);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  min-width: 320px;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
