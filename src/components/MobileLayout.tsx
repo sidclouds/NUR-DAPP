@@ -1,9 +1,17 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import logoImage from '../assets/logo.png'
 import { localeOptions, useI18n } from '../lib/i18n'
 
 export function MobileLayout() {
   const { locale, setLocale, messages, direction } = useI18n()
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false)
+  const languagePickerRef = useRef<HTMLLabelElement | null>(null)
+  const activeLocale = useMemo(
+    () => localeOptions.find((option) => option.value === locale) ?? localeOptions[0],
+    [locale],
+  )
+
   const navItems = [
     { to: '/', label: messages.navigation.home },
     { to: '/routes', label: messages.navigation.routes },
@@ -11,6 +19,28 @@ export function MobileLayout() {
     { to: '/community', label: messages.navigation.network },
     { to: '/node', label: messages.navigation.node },
   ]
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (!languagePickerRef.current?.contains(event.target as Node)) {
+        setLanguageMenuOpen(false)
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setLanguageMenuOpen(false)
+      }
+    }
+
+    window.addEventListener('mousedown', handlePointerDown)
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('mousedown', handlePointerDown)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
 
   return (
     <div className="mobile-shell">
@@ -26,7 +56,7 @@ export function MobileLayout() {
             </div>
             <div className="brand-copy">
               <span className="brand-name">{messages.common.brand}</span>
-              <strong>{messages.common.brandTagline}</strong>
+              <strong>{messages.common.projectName}</strong>
             </div>
           </div>
           <div className="banner-side">
@@ -34,20 +64,45 @@ export function MobileLayout() {
               <span className="network-dot" />
               {messages.common.networkName}
             </div>
-            <label className="language-picker">
-              <span className="language-label">{messages.common.language}</span>
+            <label
+              ref={languagePickerRef}
+              className={`language-picker ${languageMenuOpen ? 'open' : ''}`.trim()}
+            >
               <span className="language-select-shell">
-                <select value={locale} onChange={(event) => setLocale(event.target.value as typeof locale)}>
-                  {localeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.nativeLabel}
-                    </option>
-                  ))}
-                </select>
+                <button
+                  type="button"
+                  className="language-select-trigger"
+                  aria-haspopup="listbox"
+                  aria-expanded={languageMenuOpen}
+                  aria-label={activeLocale.nativeLabel}
+                  onClick={() => setLanguageMenuOpen((open) => !open)}
+                >
+                  <span className="language-select-value">{activeLocale.nativeLabel}</span>
+                </button>
                 <span className="language-select-caret" aria-hidden="true">
                   ▾
                 </span>
               </span>
+              {languageMenuOpen ? (
+                <span className="language-menu" role="listbox" aria-label="Language options">
+                  {localeOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="option"
+                      aria-selected={option.value === locale}
+                      className={`language-option ${option.value === locale ? 'active' : ''}`.trim()}
+                      onClick={() => {
+                        setLocale(option.value)
+                        setLanguageMenuOpen(false)
+                      }}
+                    >
+                      <span className="language-option-native">{option.nativeLabel}</span>
+                      <span className="language-option-label">{option.label}</span>
+                    </button>
+                  ))}
+                </span>
+              ) : null}
             </label>
           </div>
         </header>
@@ -66,6 +121,7 @@ export function MobileLayout() {
                 `nav-item ${item.isLogo ? 'nav-item-logo' : ''} ${isActive ? 'active' : ''}`.trim()
               }
               aria-label={item.label}
+              onClick={() => setLanguageMenuOpen(false)}
             >
               {item.isLogo ? (
                 <span className="nav-logo-badge" aria-label={messages.navigation.vault}>

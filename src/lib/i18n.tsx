@@ -21,9 +21,8 @@ interface LocaleOption {
 type MessageTree = {
   common: {
     brand: string
-    brandTagline: string
+    projectName: string
     networkName: string
-    language: string
     dayUnitShort: string
     minutesShort: string
     connectedWallet: string
@@ -138,9 +137,8 @@ const messages: Record<AppLocale, MessageTree> = {
   'zh-CN': {
     common: {
       brand: 'NUR',
-      brandTagline: 'Polygon 能源准入',
+      projectName: 'NUR 能源准入',
       networkName: 'Polygon',
-      language: '语言',
       dayUnitShort: '天',
       minutesShort: '分钟',
       connectedWallet: '已连接钱包',
@@ -246,9 +244,8 @@ const messages: Record<AppLocale, MessageTree> = {
   'zh-TW': {
     common: {
       brand: 'NUR',
-      brandTagline: 'Polygon 能源準入',
+      projectName: 'NUR 能源準入',
       networkName: 'Polygon',
-      language: '語言',
       dayUnitShort: '天',
       minutesShort: '分鐘',
       connectedWallet: '已連接錢包',
@@ -354,9 +351,8 @@ const messages: Record<AppLocale, MessageTree> = {
   en: {
     common: {
       brand: 'NUR',
-      brandTagline: 'Polygon Energy Access',
+      projectName: 'NUR Energy Access',
       networkName: 'Polygon',
-      language: 'Language',
       dayUnitShort: 'D',
       minutesShort: 'min',
       connectedWallet: 'Connected wallet',
@@ -462,9 +458,8 @@ const messages: Record<AppLocale, MessageTree> = {
   ru: {
     common: {
       brand: 'NUR',
-      brandTagline: 'Энергетический доступ Polygon',
+      projectName: 'Энергетический доступ NUR',
       networkName: 'Polygon',
-      language: 'Язык',
       dayUnitShort: 'д',
       minutesShort: 'мин',
       connectedWallet: 'Подключенный кошелек',
@@ -570,9 +565,8 @@ const messages: Record<AppLocale, MessageTree> = {
   fa: {
     common: {
       brand: 'NUR',
-      brandTagline: 'دسترسی انرژی Polygon',
+      projectName: 'دسترسی انرژی NUR',
       networkName: 'Polygon',
-      language: 'زبان',
       dayUnitShort: 'روز',
       minutesShort: 'دقیقه',
       connectedWallet: 'کیف پول متصل',
@@ -678,9 +672,8 @@ const messages: Record<AppLocale, MessageTree> = {
   ar: {
     common: {
       brand: 'NUR',
-      brandTagline: 'وصول الطاقة على Polygon',
+      projectName: 'وصول الطاقة من NUR',
       networkName: 'Polygon',
-      language: 'اللغة',
       dayUnitShort: 'يوم',
       minutesShort: 'دقيقة',
       connectedWallet: 'المحفظة المتصلة',
