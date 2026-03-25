@@ -1,8 +1,10 @@
+import { useCallback } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 import { GlassCard } from '../components/GlassCard'
 import { useRemoteData } from '../hooks/useRemoteData'
 import { api } from '../lib/api'
+import { useI18n } from '../lib/i18n'
 
 const initialData = {
   symbol: 'NUR',
@@ -17,63 +19,65 @@ const initialData = {
 }
 
 export function WalletPage() {
+  const { locale, messages, formatCurrency, formatNumber, formatPercent } = useI18n()
   const { address, isConnected } = useAccount()
-  const { data } = useRemoteData(api.getToken, initialData)
+  const loadToken = useCallback(() => api.getToken(locale), [locale])
+  const { data } = useRemoteData(loadToken, initialData)
 
   return (
     <div className="stack">
       <div className="page-header">
-        <p className="eyebrow">Vault</p>
-        <h1 className="screen-title">Wallet & Token</h1>
-        <p className="screen-subtitle">
-          NUR runs on Polygon and powers 60-day rewards, market profit tax routing, and node-side value flow.
-        </p>
+        <p className="eyebrow">{messages.wallet.eyebrow}</p>
+        <h1 className="screen-title">{messages.wallet.title}</h1>
+        <p className="screen-subtitle">{messages.wallet.subtitle}</p>
       </div>
 
       <GlassCard className="hero-card">
         <ConnectButton />
         <div style={{ marginTop: 18 }} className="soft-label">
-          {isConnected ? `Connected wallet: ${address}` : 'Connect your wallet to access the Polygon NUR vault.'}
+          {isConnected ? `${messages.common.connectedWallet}: ${address}` : messages.common.connectWalletPrompt}
         </div>
       </GlassCard>
 
       <div className="stats-grid">
         <GlassCard className="wallet-item">
-          <div className="soft-label">Network</div>
+          <div className="soft-label">{messages.wallet.network}</div>
           <div className="stat-value">{data.network}</div>
         </GlassCard>
         <GlassCard className="wallet-item">
-          <div className="soft-label">Total Supply</div>
-          <div className="stat-value">{data.totalSupply}</div>
+          <div className="soft-label">{messages.wallet.totalSupply}</div>
+          <div className="stat-value">{formatNumber(data.totalSupply)}</div>
         </GlassCard>
         <GlassCard className="wallet-item">
-          <div className="soft-label">Sell Profit Tax</div>
-          <div className="stat-value">{data.profitTax * 100}%</div>
+          <div className="soft-label">{messages.wallet.sellProfitTax}</div>
+          <div className="stat-value">{formatPercent(data.profitTax)}</div>
         </GlassCard>
         <GlassCard className="wallet-item">
-          <div className="soft-label">Sell Cooldown</div>
-          <div className="stat-value">{data.sellCooldownMinutes} min</div>
+          <div className="soft-label">{messages.wallet.sellCooldown}</div>
+          <div className="stat-value">
+            {formatNumber(data.sellCooldownMinutes)} {messages.common.minutesShort}
+          </div>
         </GlassCard>
       </div>
 
       <GlassCard className="route-card">
-        <div className="eyebrow">Token Rules</div>
+        <div className="eyebrow">{messages.wallet.tokenRules}</div>
         <div className="detail-grid" style={{ marginTop: 16 }}>
           <div>
-            <div className="soft-label">Reward Trigger</div>
+            <div className="soft-label">{messages.wallet.rewardTrigger}</div>
             <div className="stat-value">{data.rewardTrigger}</div>
           </div>
           <div>
-            <div className="soft-label">Reward Inventory</div>
-            <div className="stat-value">{data.rewardInventory}</div>
+            <div className="soft-label">{messages.wallet.rewardInventory}</div>
+            <div className="stat-value">{formatNumber(data.rewardInventory)}</div>
           </div>
           <div>
-            <div className="soft-label">Issued Rewards</div>
-            <div className="stat-value">{data.issuedRewards}</div>
+            <div className="soft-label">{messages.wallet.issuedRewards}</div>
+            <div className="stat-value">{formatNumber(data.issuedRewards)}</div>
           </div>
           <div>
-            <div className="soft-label">Node Threshold</div>
-            <div className="stat-value">${data.nodeThreshold}</div>
+            <div className="soft-label">{messages.wallet.nodeThreshold}</div>
+            <div className="stat-value">{formatCurrency(data.nodeThreshold)}</div>
           </div>
         </div>
       </GlassCard>

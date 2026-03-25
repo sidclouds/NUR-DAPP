@@ -1,30 +1,30 @@
 import { useCallback, useEffect, useState } from 'react'
 import { GlassCard } from '../components/GlassCard'
 import { api } from '../lib/api'
+import { useI18n } from '../lib/i18n'
 import type { CycleItem, OrderPreview } from '../types/api'
 
-const initialPreview: OrderPreview = {
-  amountUsd: 200,
-  cycleDays: 30,
-  multiplier: 1.517535,
-  estimatedReturn: 303.51,
-  userSettlement: 251.76,
-  tokenRewardAmount: 0,
-  maturityLabel: '30 day settlement window',
-}
-
 export function RoutesPage() {
+  const { locale, messages, formatCurrency, formatDaysShort, formatPercent, formatDayWindow, formatTemplate } = useI18n()
   const [cycles, setCycles] = useState<CycleItem[]>([])
   const [amount, setAmount] = useState(200)
-  const [preview, setPreview] = useState<OrderPreview>(initialPreview)
+  const [preview, setPreview] = useState<OrderPreview>({
+    amountUsd: 200,
+    cycleDays: 30,
+    multiplier: 1.517535,
+    estimatedReturn: 303.51,
+    userSettlement: 251.76,
+    tokenRewardAmount: 0,
+    maturityLabel: formatDayWindow(30),
+  })
 
   useEffect(() => {
     api.getCycles().then(setCycles)
   }, [])
 
   const refreshPreview = useCallback(() => {
-    api.previewOrder(amount).then(setPreview)
-  }, [amount])
+    api.previewOrder(amount, locale).then(setPreview)
+  }, [amount, locale])
 
   useEffect(() => {
     refreshPreview()
@@ -33,16 +33,14 @@ export function RoutesPage() {
   return (
     <div className="stack">
       <div className="page-header">
-        <p className="eyebrow">Routes</p>
-        <h1 className="screen-title">Route Subscription</h1>
-        <p className="screen-subtitle">
-          Every order enters the active NUR cycle pool first, then settles by the confirmed route window.
-        </p>
+        <p className="eyebrow">{messages.routes.eyebrow}</p>
+        <h1 className="screen-title">{messages.routes.title}</h1>
+        <p className="screen-subtitle">{messages.routes.subtitle}</p>
       </div>
 
       <GlassCard className="hero-card">
         <div className="field">
-          <label htmlFor="amount">Subscription Amount (1 - 1000 USDT)</label>
+          <label htmlFor="amount">{messages.routes.amountLabel}</label>
           <input
             id="amount"
             type="number"
@@ -54,39 +52,41 @@ export function RoutesPage() {
         </div>
         <div className="split-actions">
           <button className="primary-button" type="button" onClick={refreshPreview}>
-            Refresh Preview
+            {messages.routes.refreshPreview}
           </button>
           <button className="secondary-button" type="button">
-            Submit Order
+            {messages.routes.submitOrder}
           </button>
         </div>
       </GlassCard>
 
       <GlassCard className="route-card">
-        <div className="eyebrow">Preview Result</div>
+        <div className="eyebrow">{messages.routes.previewResult}</div>
         <div className="detail-grid" style={{ marginTop: 16 }}>
           <div>
-            <div className="soft-label">Random Cycle</div>
-            <div className="stat-value">{preview.cycleDays}D</div>
+            <div className="soft-label">{messages.routes.randomCycle}</div>
+            <div className="stat-value">{formatDaysShort(preview.cycleDays)}</div>
           </div>
           <div>
-            <div className="soft-label">Settlement Multiplier</div>
+            <div className="soft-label">{messages.routes.settlementMultiplier}</div>
             <div className="stat-value">{preview.multiplier.toFixed(6)}x</div>
           </div>
           <div>
-            <div className="soft-label">Gross Return</div>
-            <div className="stat-value">${preview.estimatedReturn}</div>
+            <div className="soft-label">{messages.routes.grossReturn}</div>
+            <div className="stat-value">{formatCurrency(preview.estimatedReturn)}</div>
           </div>
           <div>
-            <div className="soft-label">User Settlement</div>
-            <div className="stat-value">${preview.userSettlement}</div>
+            <div className="soft-label">{messages.routes.userSettlement}</div>
+            <div className="stat-value">{formatCurrency(preview.userSettlement)}</div>
           </div>
           <div>
-            <div className="soft-label">NUR Reward</div>
-            <div className="stat-value">{preview.tokenRewardAmount} NUR</div>
+            <div className="soft-label">{messages.routes.nurReward}</div>
+            <div className="stat-value">
+              {preview.tokenRewardAmount.toFixed(preview.tokenRewardAmount % 1 === 0 ? 0 : 2)} NUR
+            </div>
           </div>
           <div>
-            <div className="soft-label">Maturity</div>
+            <div className="soft-label">{messages.routes.maturity}</div>
             <div className="stat-value">{preview.maturityLabel}</div>
           </div>
         </div>
@@ -95,9 +95,17 @@ export function RoutesPage() {
       <div className="table">
         {cycles.map((cycle) => (
           <GlassCard key={cycle.cycleDays} className="table-row">
-            <strong>{cycle.cycleDays}D</strong>
-            <span className="soft-label">{cycle.multiplier.toFixed(6)}x settlement</span>
-            <span className="soft-label">{(cycle.randomWeight * 100).toFixed(0)}% probability</span>
+            <strong>{formatDaysShort(cycle.cycleDays)}</strong>
+            <span className="soft-label">
+              {formatTemplate(messages.common.settlementLabel, {
+                value: `${cycle.multiplier.toFixed(6)}x`,
+              })}
+            </span>
+            <span className="soft-label">
+              {formatTemplate(messages.common.probabilityLabel, {
+                value: formatPercent(cycle.randomWeight),
+              })}
+            </span>
           </GlassCard>
         ))}
       </div>

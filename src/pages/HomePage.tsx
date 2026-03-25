@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { GlassCard } from '../components/GlassCard'
 import { useRemoteData } from '../hooks/useRemoteData'
 import { api } from '../lib/api'
+import { useI18n } from '../lib/i18n'
 
 const initialData = {
   hero: {
@@ -24,7 +25,9 @@ const initialData = {
 }
 
 export function HomePage() {
-  const { data } = useRemoteData(api.getDashboard, initialData)
+  const { locale, messages, formatCurrency, formatDaysShort } = useI18n()
+  const loadDashboard = useCallback(() => api.getDashboard(locale), [locale])
+  const { data } = useRemoteData(loadDashboard, initialData)
   const totalHighlights = useMemo(() => data.stats.slice(0, 4), [data.stats])
 
   return (
@@ -36,14 +39,14 @@ export function HomePage() {
       </div>
 
       <GlassCard className="hero-card">
-        <div className="eyebrow">Project Notice</div>
+        <div className="eyebrow">{messages.home.notice}</div>
         <div className="hero-value">{data.hero.announcement}</div>
         <div className="hero-actions">
           <button className="primary-button" type="button">
-            Unlock Access
+            {messages.home.unlockAccess}
           </button>
           <button className="secondary-button" type="button">
-            View Routes
+            {messages.home.viewRoutes}
           </button>
         </div>
       </GlassCard>
@@ -58,7 +61,7 @@ export function HomePage() {
       </div>
 
       <GlassCard className="route-card">
-        <div className="eyebrow">Live Route Flow</div>
+        <div className="eyebrow">{messages.home.liveRouteFlow}</div>
         <div className="stack" style={{ marginTop: 16 }}>
           {data.aisRoutes.map((route) => (
             <div key={route.name} className="line-item glass-card">
@@ -75,23 +78,23 @@ export function HomePage() {
       </GlassCard>
 
       <GlassCard className="route-card">
-        <div className="eyebrow">Featured Order</div>
+        <div className="eyebrow">{messages.home.featuredOrder}</div>
         <div className="detail-grid" style={{ marginTop: 16 }}>
           <div>
-            <div className="soft-label">Order ID</div>
+            <div className="soft-label">{messages.home.orderId}</div>
             <div className="stat-value">{data.featuredOrder.id || 'N/A'}</div>
           </div>
           <div>
-            <div className="soft-label">Subscription</div>
-            <div className="stat-value">${data.featuredOrder.amountUsd}</div>
+            <div className="soft-label">{messages.home.subscription}</div>
+            <div className="stat-value">{formatCurrency(data.featuredOrder.amountUsd)}</div>
           </div>
           <div>
-            <div className="soft-label">Confirmed Cycle</div>
-            <div className="stat-value">{data.featuredOrder.routeCycleDays}D</div>
+            <div className="soft-label">{messages.home.confirmedCycle}</div>
+            <div className="stat-value">{formatDaysShort(data.featuredOrder.routeCycleDays)}</div>
           </div>
           <div>
-            <div className="soft-label">User Settlement</div>
-            <div className="stat-value">${data.featuredOrder.userSettlement}</div>
+            <div className="soft-label">{messages.home.userSettlement}</div>
+            <div className="stat-value">{formatCurrency(data.featuredOrder.userSettlement)}</div>
           </div>
         </div>
       </GlassCard>

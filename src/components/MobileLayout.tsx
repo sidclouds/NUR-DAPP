@@ -1,18 +1,20 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import logoImage from '../assets/logo.png'
-
-const navItems = [
-  { to: '/', label: 'Home' },
-  { to: '/routes', label: 'Routes' },
-  { to: '/wallet', label: 'Vault', isLogo: true },
-  { to: '/community', label: 'Network' },
-  { to: '/node', label: 'Node' },
-]
+import { localeOptions, useI18n } from '../lib/i18n'
 
 export function MobileLayout() {
+  const { locale, setLocale, messages, direction } = useI18n()
+  const navItems = [
+    { to: '/', label: messages.navigation.home },
+    { to: '/routes', label: messages.navigation.routes },
+    { to: '/wallet', label: messages.navigation.vault, isLogo: true },
+    { to: '/community', label: messages.navigation.network },
+    { to: '/node', label: messages.navigation.node },
+  ]
+
   return (
     <div className="mobile-shell">
-      <div className="mobile-frame">
+      <div className="mobile-frame" dir={direction}>
         <div className="theme-orbit theme-orbit-left" />
         <div className="theme-orbit theme-orbit-right" />
         <img className="brand-watermark" src={logoImage} alt="" aria-hidden="true" />
@@ -23,13 +25,30 @@ export function MobileLayout() {
               <img className="brand-logo" src={logoImage} alt="NUR" />
             </div>
             <div className="brand-copy">
-              <span className="brand-name">NUR</span>
-              <strong>Polygon Energy Access</strong>
+              <span className="brand-name">{messages.common.brand}</span>
+              <strong>{messages.common.brandTagline}</strong>
             </div>
           </div>
-          <div className="network-pill">
-            <span className="network-dot" />
-            Polygon
+          <div className="banner-side">
+            <div className="network-pill">
+              <span className="network-dot" />
+              {messages.common.networkName}
+            </div>
+            <label className="language-picker">
+              <span className="language-label">{messages.common.language}</span>
+              <span className="language-select-shell">
+                <select value={locale} onChange={(event) => setLocale(event.target.value as typeof locale)}>
+                  {localeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.nativeLabel}
+                    </option>
+                  ))}
+                </select>
+                <span className="language-select-caret" aria-hidden="true">
+                  ▾
+                </span>
+              </span>
+            </label>
           </div>
         </header>
 
@@ -46,10 +65,11 @@ export function MobileLayout() {
               className={({ isActive }) =>
                 `nav-item ${item.isLogo ? 'nav-item-logo' : ''} ${isActive ? 'active' : ''}`.trim()
               }
+              aria-label={item.label}
             >
               {item.isLogo ? (
-                <span className="nav-logo-badge" aria-label="Vault">
-                  <img src={logoImage} alt="NUR Vault" />
+                <span className="nav-logo-badge" aria-label={messages.navigation.vault}>
+                  <img src={logoImage} alt={messages.navigation.vault} />
                 </span>
               ) : (
                 <span className="nav-item-text">{item.label}</span>

@@ -1,6 +1,8 @@
+import { useCallback } from 'react'
 import { GlassCard } from '../components/GlassCard'
 import { useRemoteData } from '../hooks/useRemoteData'
 import { api } from '../lib/api'
+import { useI18n } from '../lib/i18n'
 
 const initialData = {
   totalMembers: 0,
@@ -12,40 +14,40 @@ const initialData = {
 }
 
 export function CommunityPage() {
-  const { data } = useRemoteData(api.getCommunity, initialData)
+  const { locale, messages, formatCurrency, formatNumber, formatPercent, formatTemplate } = useI18n()
+  const loadCommunity = useCallback(() => api.getCommunity(locale), [locale])
+  const { data } = useRemoteData(loadCommunity, initialData)
 
   return (
     <div className="stack">
       <div className="page-header">
-        <p className="eyebrow">Network</p>
-        <h1 className="screen-title">Ambassador Network</h1>
-        <p className="screen-subtitle">
-          Community growth follows the active NUR ambassador ladder, with level-based differential rewards.
-        </p>
+        <p className="eyebrow">{messages.community.eyebrow}</p>
+        <h1 className="screen-title">{messages.community.title}</h1>
+        <p className="screen-subtitle">{messages.community.subtitle}</p>
       </div>
 
       <div className="stats-grid">
         <GlassCard className="stat-card">
-          <div className="stat-label">Total Members</div>
-          <div className="stat-value">{data.totalMembers}</div>
+          <div className="stat-label">{messages.community.totalMembers}</div>
+          <div className="stat-value">{formatNumber(data.totalMembers)}</div>
         </GlassCard>
         <GlassCard className="stat-card">
-          <div className="stat-label">Active Ambassadors</div>
-          <div className="stat-value">{data.activeAmbassadors}</div>
+          <div className="stat-label">{messages.community.activeAmbassadors}</div>
+          <div className="stat-value">{formatNumber(data.activeAmbassadors)}</div>
         </GlassCard>
         <GlassCard className="stat-card">
-          <div className="stat-label">Invite Rewards</div>
-          <div className="stat-value">${data.totalInviteRewards.toLocaleString()}</div>
+          <div className="stat-label">{messages.community.inviteRewards}</div>
+          <div className="stat-value">{formatCurrency(data.totalInviteRewards)}</div>
         </GlassCard>
         <GlassCard className="stat-card">
-          <div className="stat-label">Contribution Score</div>
-          <div className="stat-value">{data.contributionScore}</div>
+          <div className="stat-label">{messages.community.contributionScore}</div>
+          <div className="stat-value">{formatNumber(data.contributionScore)}</div>
         </GlassCard>
       </div>
 
       <GlassCard className="route-card">
-        <div className="eyebrow">Level Progress</div>
-        <div className="hero-value">{Math.round(data.levelProgress * 100)}%</div>
+        <div className="eyebrow">{messages.community.levelProgress}</div>
+        <div className="hero-value">{formatPercent(data.levelProgress)}</div>
         <div className="progress">
           <span style={{ width: `${data.levelProgress * 100}%` }} />
         </div>
@@ -55,8 +57,16 @@ export function CommunityPage() {
         {data.ambassadorTable.map((item: { level: string; target: number; ratio: string }) => (
           <GlassCard key={item.level} className="table-row">
             <strong>{item.level}</strong>
-            <span className="soft-label">Team target {item.target.toLocaleString()}</span>
-            <span className="soft-label">Cumulative ratio {item.ratio}</span>
+            <span className="soft-label">
+              {formatTemplate(messages.common.teamTargetLabel, {
+                value: formatNumber(item.target),
+              })}
+            </span>
+            <span className="soft-label">
+              {formatTemplate(messages.common.cumulativeRatioLabel, {
+                value: item.ratio,
+              })}
+            </span>
           </GlassCard>
         ))}
       </div>
