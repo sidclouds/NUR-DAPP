@@ -3,7 +3,7 @@ import { polygon } from 'wagmi/chains'
 
 export const wagmiConfig = getDefaultConfig({
   appName: 'NUR',
-  projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'nur-polygon-project-id',
+  projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? '',
   chains: [polygon],
   ssr: false,
 })

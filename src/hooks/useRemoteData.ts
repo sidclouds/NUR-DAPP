@@ -6,12 +6,16 @@ export function useRemoteData<T>(loader: () => Promise<T>, initialValue: T) {
 
   useEffect(() => {
     let mounted = true
+    setLoading(true)
 
     loader()
       .then((result) => {
         if (mounted) {
           setData(result)
         }
+      })
+      .catch(() => {
+        // keep last known value when remote fetch fails
       })
       .finally(() => {
         if (mounted) {

@@ -13,7 +13,7 @@ const initialData = {
     faq: [],
   },
   stats: [],
-  aisRoutes: [],
+  execution: [],
   featuredOrder: {
     id: '',
     amountUsd: 0,
@@ -63,15 +63,13 @@ export function HomePage() {
       <GlassCard className="route-card">
         <div className="eyebrow">{messages.home.liveRouteFlow}</div>
         <div className="stack" style={{ marginTop: 16 }}>
-          {data.aisRoutes.map((route) => (
-            <div key={route.name} className="line-item glass-card">
+          {data.execution.map((item) => (
+            <div key={item.title} className="line-item glass-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <strong>{route.name}</strong>
-                <span className="soft-label">{route.status}</span>
+                <strong>{item.title}</strong>
+                <span className="soft-label">Live rule</span>
               </div>
-              <div className="progress">
-                <span style={{ width: `${route.progress}%` }} />
-              </div>
+              <div className="soft-label">{item.detail}</div>
             </div>
           ))}
         </div>

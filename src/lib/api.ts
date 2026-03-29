@@ -8,148 +8,163 @@ import type {
 } from '../types/api'
 import { getMessages, type AppLocale } from './i18n'
 
-const DEMO_DELAY_MS = 120
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'
+const cache = new Map<string, { expiresAt: number; value?: unknown; promise?: Promise<unknown> }>()
 
-const cyclesFallback: CycleItem[] = [
-  { cycleDays: 1, multiplier: 1.006, returnRate: 0.006, randomWeight: 0.05, isActive: true },
-  { cycleDays: 5, multiplier: 1.030362, returnRate: 0.030362, randomWeight: 0.05, isActive: true },
-  { cycleDays: 10, multiplier: 1.082942, returnRate: 0.082942, randomWeight: 0.05, isActive: true },
-  { cycleDays: 15, multiplier: 1.126959, returnRate: 0.126959, randomWeight: 0.05, isActive: true },
-  { cycleDays: 20, multiplier: 1.22019, returnRate: 0.22019, randomWeight: 0.05, isActive: true },
-  { cycleDays: 25, multiplier: 1.282432, returnRate: 0.282432, randomWeight: 0.1, isActive: true },
-  { cycleDays: 30, multiplier: 1.517535, returnRate: 0.517535, randomWeight: 0.2, isActive: true },
-  { cycleDays: 40, multiplier: 1.743886, returnRate: 0.743886, randomWeight: 0.25, isActive: true },
-  { cycleDays: 60, multiplier: 2.372046, returnRate: 1.372046, randomWeight: 0.2, isActive: true },
-]
+type ApiEnvelope<T> = {
+  success: boolean
+  data: T
+  message?: string
+}
 
-function wait(ms: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms)
+function getCached<T>(key: string, ttlMs: number, loader: () => Promise<T>) {
+  const now = Date.now()
+  const existing = cache.get(key)
+
+  if (existing?.value !== undefined && now < existing.expiresAt) {
+    return Promise.resolve(existing.value as T)
+  }
+
+  if (existing?.promise) {
+    return existing.promise as Promise<T>
+  }
+
+  const promise = loader()
+    .then((value) => {
+      cache.set(key, { value, expiresAt: Date.now() + ttlMs })
+      return value
+    })
+    .catch((error) => {
+      cache.delete(key)
+      throw error
+    })
+
+  cache.set(key, { expiresAt: now + ttlMs, promise })
+  return promise
+}
+
+async function request<T>(path: string, init?: RequestInit) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(init?.headers || {}),
+    },
+    ...init,
   })
-}
 
-async function mockRequest<T>(fallback: T): Promise<T> {
-  await wait(DEMO_DELAY_MS)
-  return fallback
-}
+  const payload = (await response.json().catch(() => null)) as ApiEnvelope<T> | null
 
-function pickWeightedCycle() {
-  const seed = Math.random()
-  let cumulative = 0
-
-  for (const cycle of cyclesFallback) {
-    cumulative += cycle.randomWeight
-    if (seed <= cumulative) {
-      return cycle
-    }
+  if (!response.ok || !payload?.success) {
+    throw new Error(payload?.message || `Request failed with ${response.status}`)
   }
 
-  return cyclesFallback[cyclesFallback.length - 1]
+  return payload.data
 }
 
-function buildDashboard(locale: AppLocale): DashboardResponse {
+function mapDashboardResponse(payload: any, locale: AppLocale): DashboardResponse {
   const copy = getMessages(locale)
 
   return {
-    hero: {
-      heroTitle: copy.data.heroTitle,
-      heroSubtitle: copy.data.heroSubtitle,
-      heroVideoUrl: '',
-      announcement: copy.data.announcement,
-      faq: [copy.routes.subtitle],
-    },
-    stats: [
-      { label: copy.common.cycleMatrix, value: copy.common.cycleMatrixValue },
-      { label: copy.common.highestRoute, value: copy.common.highestRouteValue },
-      { label: copy.node.nodeThreshold, value: copy.common.nodeThresholdValue },
-      { label: copy.common.networkLabel, value: copy.common.networkName },
-    ],
-    aisRoutes: copy.data.routeNames.map((name, index) => ({
-      name,
-      status: copy.data.routeStatuses[index],
-      progress: [52, 77, 64][index],
-    })),
+    hero: payload.hero,
+    stats: payload.stats,
+    execution: payload.execution ?? [],
     featuredOrder: {
-      id: 'NUR-240318-081',
-      amountUsd: 800,
-      routeCycleDays: 40,
-      userSettlement: 1097.55,
-      tokenRewardAmount: 0,
-      status: copy.common.statusConfirmed,
+      id: payload.featuredOrder?.id || `NUR-${payload.featuredOrder?.userId || 'route'}`,
+      amountUsd: payload.featuredOrder?.amountUsd || 0,
+      routeCycleDays: payload.featuredOrder?.cycleDays || 0,
+      userSettlement: payload.featuredOrder?.userTake || 0,
+      tokenRewardAmount: payload.featuredOrder?.tokenRewardAmount || 0,
+      status: payload.featuredOrder?.status || copy.common.statusConfirmed,
     },
   }
 }
 
-function buildCommunity(locale: AppLocale): CommunityResponse {
-  void locale
-
-  return {
-    totalMembers: 12840,
-    activeAmbassadors: 926,
-    totalInviteRewards: 382400,
-    contributionScore: 168,
-    levelProgress: 0.62,
-    ambassadorTable: [
-      { level: 'V1', target: 10000, ratio: '8%' },
-      { level: 'V4', target: 300000, ratio: '32%' },
-      { level: 'V8', target: 4800000, ratio: '64%' },
-      { level: 'V12', target: 80000000, ratio: '96%' },
-    ],
-  }
-}
-
-function buildNode(locale: AppLocale): NodeResponse {
-  const copy = getMessages(locale)
-
-  return {
-    activeNodes: 21,
-    nodeThreshold: 1500,
-    orderShare: copy.data.orderShare,
-    marketShare: copy.data.marketShare,
-    rights: copy.data.nodeRights,
-  }
-}
-
-function buildToken(locale: AppLocale): TokenResponse {
-  const copy = getMessages(locale)
-
-  return {
-    symbol: 'NUR',
-    network: 'Polygon',
-    totalSupply: 10000,
-    rewardTrigger: copy.data.rewardTrigger,
-    rewardInventory: 1500,
-    issuedRewards: 976,
-    profitTax: 0.1,
-    sellCooldownMinutes: 1,
-    nodeThreshold: 1500,
-  }
-}
-
-function buildPreviewForLocale(amountUsd: number, locale: AppLocale): OrderPreview {
-  const cycle = pickWeightedCycle()
-  const estimatedReturn = Number((amountUsd * cycle.multiplier).toFixed(2))
-  const profit = estimatedReturn - amountUsd
-  const userSettlement = Number((amountUsd + profit / 2).toFixed(2))
-  const copy = getMessages(locale)
-
-  return {
-    amountUsd,
+function mapCyclesResponse(payload: any[]): CycleItem[] {
+  return payload.map((cycle) => ({
     cycleDays: cycle.cycleDays,
     multiplier: cycle.multiplier,
-    estimatedReturn,
-    userSettlement,
-    tokenRewardAmount: cycle.cycleDays === 60 ? Number((amountUsd / 200).toFixed(2)) : 0,
-    maturityLabel: copy.common.daySettlementWindow.replace('{days}', String(cycle.cycleDays)),
+    rateLabel: cycle.rateLabel,
+    returnRate: cycle.returnRate ?? Math.max(cycle.multiplier - 1, 0),
+    randomWeight: cycle.randomWeight,
+    isActive: cycle.isActive,
+  }))
+}
+
+function mapCommunityResponse(payload: any): CommunityResponse {
+  return {
+    totalMembers: payload.totalMembers,
+    directMembers: payload.directMembers,
+    activeAmbassadors: payload.directMembers ?? 0,
+    totalInviteRewards: payload.teamVolume ?? 0,
+    contributionScore: payload.accIn ?? 0,
+    levelProgress: payload.currentLevel ? Math.min(payload.currentLevel / 12, 1) : 0,
+    ambassadorTable: payload.levelTable ?? [],
+  }
+}
+
+function mapNodeResponse(payload: any): NodeResponse {
+  return {
+    activeNodes: payload.activeNodes,
+    nodePrice: payload.nodePrice,
+    nodeThreshold: payload.nodeThreshold,
+    orderShare: payload.orderShare ?? payload.payoutSources?.[0] ?? '',
+    marketShare: payload.marketShare ?? payload.payoutSources?.[1] ?? '',
+    payoutSources: payload.payoutSources,
+    rights: payload.rights ?? [],
+  }
+}
+
+function mapTokenResponse(payload: any): TokenResponse {
+  return {
+    symbol: payload.symbol,
+    network: 'Polygon',
+    totalSupply: payload.totalSupply,
+    rewardTrigger: payload.rewardTrigger ?? `1 NUR / ${payload.rewardTokenRate ?? 200} settlement`,
+    rewardInventory: payload.rewardInventory,
+    issuedRewards: payload.issuedRewards ?? 0,
+    profitTax: payload.sellProfitTax,
+    sellCooldownMinutes: payload.sellCooldownMinutes,
+    nodeThreshold: payload.nodeThreshold,
+    rewardTokenRate: payload.rewardTokenRate,
+    swapAtAmount: payload.swapAtAmount,
+    rewardSource: payload.rewardSource,
+    contractAddresses: payload.contractAddresses,
+  }
+}
+
+function mapPreviewResponse(payload: any): OrderPreview {
+  return {
+    amountUsd: payload.amountUsd,
+    cycleDays: payload.cycleDays,
+    multiplier: payload.multiplier,
+    grossReturn: payload.grossReturn,
+    estimatedReturn: payload.grossReturn,
+    userSettlement: payload.userTake,
+    teamPool: payload.teamPool,
+    nodePool: payload.nodePool,
+    supportPool: payload.supportPool,
+    tokenRewardAmount: payload.tokenRewardAmount,
+    maturityLabel: payload.maturityLabel,
   }
 }
 
 export const api = {
-  getDashboard: (locale: AppLocale) => mockRequest<DashboardResponse>(buildDashboard(locale)),
-  getCycles: () => mockRequest<CycleItem[]>(cyclesFallback),
-  getCommunity: (locale: AppLocale) => mockRequest<CommunityResponse>(buildCommunity(locale)),
-  getNodes: (locale: AppLocale) => mockRequest<NodeResponse>(buildNode(locale)),
-  getToken: (locale: AppLocale) => mockRequest<TokenResponse>(buildToken(locale)),
-  previewOrder: async (amountUsd: number, locale: AppLocale) =>
-    mockRequest<OrderPreview>(buildPreviewForLocale(amountUsd, locale)),
+  getDashboard: async (locale: AppLocale) =>
+    mapDashboardResponse(await getCached('public:dashboard', 15000, () => request('/public/dashboard')), locale),
+  getCycles: async () => mapCyclesResponse(await getCached('public:cycles', 60000, () => request('/public/cycles'))),
+  getCommunity: async (_locale: AppLocale) =>
+    mapCommunityResponse(await getCached('public:community', 15000, () => request('/public/community'))),
+  getNodes: async (_locale: AppLocale) =>
+    mapNodeResponse(await getCached('public:nodes', 15000, () => request('/public/nodes'))),
+  getToken: async (_locale: AppLocale) =>
+    mapTokenResponse(await getCached('public:token', 15000, () => request('/public/token'))),
+  previewOrder: async (amountUsd: number, _locale: AppLocale) =>
+    mapPreviewResponse(
+      await getCached(`public:preview:${amountUsd}`, 5000, () =>
+        request('/public/orders/preview', {
+          method: 'POST',
+          body: JSON.stringify({ amountUsd }),
+        }),
+      ),
+    ),
 }

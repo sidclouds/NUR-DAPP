@@ -7,7 +7,7 @@ export interface DashboardResponse {
     faq: string[]
   }
   stats: Array<{ label: string; value: string }>
-  aisRoutes: Array<{ name: string; status: string; progress: number }>
+  execution: Array<{ title: string; detail: string }>
   featuredOrder: {
     id: string
     amountUsd: number
@@ -21,7 +21,8 @@ export interface DashboardResponse {
 export interface CycleItem {
   cycleDays: number
   multiplier: number
-  returnRate: number
+  rateLabel?: string
+  returnRate?: number
   randomWeight: number
   isActive: boolean
 }
@@ -30,14 +31,19 @@ export interface OrderPreview {
   amountUsd: number
   cycleDays: number
   multiplier: number
+  grossReturn: number
   estimatedReturn: number
   userSettlement: number
+  teamPool: number
+  nodePool: number
+  supportPool: number
   tokenRewardAmount: number
   maturityLabel: string
 }
 
 export interface CommunityResponse {
   totalMembers: number
+  directMembers?: number
   activeAmbassadors: number
   totalInviteRewards: number
   contributionScore: number
@@ -47,9 +53,11 @@ export interface CommunityResponse {
 
 export interface NodeResponse {
   activeNodes: number
+  nodePrice?: number
   nodeThreshold: number
   orderShare: string
   marketShare: string
+  payoutSources?: string[]
   rights: string[]
 }
 
@@ -63,4 +71,34 @@ export interface TokenResponse {
   profitTax: number
   sellCooldownMinutes: number
   nodeThreshold: number
+  rewardTokenRate?: number
+  swapAtAmount?: number
+  rewardSource?: string
+  contractAddresses?: {
+    token?: string
+    stake?: string
+    node?: string
+  }
+}
+
+export interface WalletSnapshot {
+  settlementSymbol: string
+  settlementDecimals: number
+  settlementBalance: number
+  nurBalance: number
+  shareBalance: number
+  accumulatedAmount: number
+  currentLevel: number
+  isNode: boolean
+  totalOrders: number
+}
+
+export interface ChainOrderItem {
+  index: number
+  amount: number
+  cycleDays: number
+  isWithdrawn: boolean
+  startTime: number
+  referenceBlock: number
+  status: 'pending_confirm' | 'active' | 'matured' | 'withdrawn'
 }
